@@ -10,10 +10,13 @@ class App extends React.Component {
     super();
     //methods to bind
     this.initMixList = this.initMixList.bind(this);
+    this.getMoreData = this.getMoreData.bind(this);
     //initial state [HQ]
     this.state = {
       //add user/auth?
-      tracks: []
+      tracks: [],
+      next_href: '',
+      more_data: false
     }
   }
 
@@ -50,26 +53,82 @@ class App extends React.Component {
 
     console.log(`${user} is ${user_id}`);
 
+    const page_size = 3000;
+    // console.log('first call');
+    // SC.get(`/users/${user_id}/favorites`,{
+    //   limit: page_size//,
+    //   //offset:0,
+    //   // duration: {
+    //   //   from: 1800 * 1000 // anything over 30 minutes
+    //    //}
+    // }).then(res => {
+    //   console.log(res);
+    //   //const trackLength = res.data.tracks.length;
+    //   //const randomNumber = Math.floor((Math.random()*trackLength)+1);
+    //   //this.setState({track:res.data.tracks[randomNumber]})
+    // })
+    // .catch(err => {
+    //   console.log(`eror ${err}`);
+    // })
 
+    //console.log('paged call');
     SC.get(`/users/${user_id}/favorites`,{
-      limit: 5000,
-      offset:0,
-      duration: {
-        from: 1800 * 1000 // anything over 30 minutes
+      limit: page_size,
+      linked_partitioning: 1
+      //offset:0,
+      // duration: {
+      //   from: 1800 * 1000 // anything over 30 minutes
+       //}
+    }).then(res => {
+      console.log(res);
+      const nextHref = res.next_href;
+      console.log(res.next_href);
+      const next_href = nextHref.replace('https://api.soundcloud.com/','');
+      if (res.next_href) {
+        this.setState({next_href: next_href, more_data:true});
+      } else {
+        this.setState({next_href: next_href, more_data:false});
       }
-    }).then(function(){
-      const tracks = {...this.setState.tracks};
-      //const mixes = [];
-      // console.log(tracks);
-      // for(let i = 0; i<tracks.length; i++) {
-      //   if(tracks[i].duration > 1800 * 1000) {
-      //     mixes.push(tracks[i]);
-      //     tracks = [...mixes]
-      //   }
-      // }
-      // console.log(tracks);
-      this.setState({tracks});
-    });
+      // const trackLength = res.data.tracks.length;
+      // const randomNumber = Math.floor((Math.random()*trackLength)+1);
+      // this.setState({track:res.data.tracks[randomNumber]})
+    })
+    .catch(err => {
+      console.log(`ERROR ${err}`);
+    })
+  }
+
+  getMoreData(url) {
+    url = this.state.next_href;
+    if(this.state.more_data === false || this.state.next_href === undefined) {
+      this.setState({next_href: '', more_data:false});
+      return;
+    } else {
+      SC.get(url,{
+        limit: 3000,
+        linked_partitioning: 1
+        //offset:0,
+        // duration: {
+        //   from: 1800 * 1000 // anything over 30 minutes
+         //}
+      }).then(res => {
+        console.log(res);
+        const nextHref = res.next_href;
+        console.log(nextHref);
+        const next_href = nextHref.replace('https://api.soundcloud.com/','');
+        if (res.next_href) {
+          this.setState({next_href: next_href, more_data:true});
+        } else {
+          this.setState({next_href: next_href, more_data:false});
+        }
+        // const trackLength = res.data.tracks.length;
+        // const randomNumber = Math.floor((Math.random()*trackLength)+1);
+        // this.setState({track:res.data.tracks[randomNumber]})
+      })
+      .catch(err => {
+        console.log(`eror ${err}`);
+      })
+    }
   }
 
 
@@ -90,6 +149,9 @@ class App extends React.Component {
         </ul>
           <button onClick={this.initMixList} className="init-btn" type="button">
           Launch Long Listens
+          </button>
+          <button onClick={this.getMoreData} className="get-btn" type="button" next_href={this.state.next_href} disabled={this.state.more_data === false}>
+          Get More
           </button>
       </div>
     );
