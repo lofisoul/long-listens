@@ -11,9 +11,10 @@ class App extends React.Component {
     //methods to bind
     this.initMixList = this.initMixList.bind(this);
     this.getMoreData = this.getMoreData.bind(this);
+    this.functionTest = this.functionTest.bind(this);
     //initial state [HQ]
     this.state = {
-      //add user/auth?
+      //add user/auth
       tracks: [],
       next_href: '',
       more_data: false
@@ -86,8 +87,14 @@ class App extends React.Component {
       const next_href = nextHref.replace('https://api.soundcloud.com/','');
       if (res.next_href) {
         this.setState({next_href: next_href, more_data:true});
+        do{
+          this.getMoreData(this.next_href)
+          //this.setState({more_date:false});
+        } while(this.more_data === true);
+        console.log('do while done!');
       } else {
         this.setState({next_href: next_href, more_data:false});
+        console.log('hit the else');
       }
       // const trackLength = res.data.tracks.length;
       // const randomNumber = Math.floor((Math.random()*trackLength)+1);
@@ -100,8 +107,10 @@ class App extends React.Component {
 
   getMoreData(url) {
     url = this.state.next_href;
+    console.log(`get more data url = ${url}`);
     if(this.state.more_data === false || this.state.next_href === undefined) {
       this.setState({next_href: '', more_data:false});
+      console.log('done getting more!');
       return;
     } else {
       SC.get(url,{
@@ -115,20 +124,24 @@ class App extends React.Component {
         console.log(res);
         const nextHref = res.next_href;
         console.log(nextHref);
-        const next_href = nextHref.replace('https://api.soundcloud.com/','');
-        if (res.next_href) {
+        if (res.next_href !== undefined) {
+          const next_href = nextHref.replace('https://api.soundcloud.com/','');
           this.setState({next_href: next_href, more_data:true});
         } else {
-          this.setState({next_href: next_href, more_data:false});
+          this.setState({next_href: '', more_data:false});
         }
         // const trackLength = res.data.tracks.length;
         // const randomNumber = Math.floor((Math.random()*trackLength)+1);
         // this.setState({track:res.data.tracks[randomNumber]})
       })
       .catch(err => {
-        console.log(`eror ${err}`);
+        console.log(`**ERROR** ${err}`);
       })
     }
+  }
+
+  functionTest(msg) {
+    console.log(msg);
   }
 
 
